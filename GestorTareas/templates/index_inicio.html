@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 400px; /* Reduje el ancho para que se vea mejor en dispositivos móviles */
+            padding: 20px;
+            background-color: #252525;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 30px; /* Reduje el tamaño del título para que se vea mejor con el nuevo diseño */
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 30px; /* Reduje el tamaño del título para que se vea mejor con el nuevo diseño */
+            color: rgb(51, 88, 193);
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color:rgb(51, 88, 193);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <form action="/ini" method="post">
+        <h1>GESTOR DE TAREAS</h1>
+        <div class="container">
+            <h2>Iniciar Sesión</h2>
+            <input type="text" name="usuario" placeholder="Usuario" required>
+            <input type="password" name="contrasena" placeholder="Contraseña" required>
+            <button type="submit" name="accederBtn" value="Acceder">Acceder</button>
+        </div>
+    </form>
+</body>
+</html>
