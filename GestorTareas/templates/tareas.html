@@ -1,333 +1,338 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Tareas</title>
     <style>
+        :root {
+            --primary: #4a90e2;
+            --primary-dark: #357abd;
+            --bg: #f5f6fa;
+            --card: #ffffff;
+            --text: #333333;
+            --danger: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
+            font-family: "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
         }
 
         header {
-            background-color: #333;
+            background: var(--primary);
             color: #fff;
             padding: 20px;
             text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
 
         header h1 {
             margin: 0;
-            font-size: 36px;
+            font-weight: 500;
+            letter-spacing: 2px;
         }
 
         .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 25px;
+            background: var(--card);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .btn-container {
-            text-align: right;
-            margin-bottom: 20px;
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .btn-container button {
-            margin-left: 10px;
-            padding: 10px 20px;
-            background-color: #333;
+        button, .actions form button {
+            background: var(--primary);
             color: #fff;
             border: none;
+            padding: 10px 16px;
+            font-size: 14px;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover, .actions form button:hover {
+            background: var(--primary-dark);
+        }
+
+        .actions form button {
+            background: var(--danger);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 6px;
         }
 
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-
-        table th {
-            background-color: #333;
+        thead {
+            background: var(--primary);
             color: #fff;
         }
 
-        table tr:nth-child(even) {
-            background-color: #f2f2f2;
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
         }
 
-        table tr:hover {
-            background-color: #ddd;
+        tr:nth-child(even) {
+            background: #f8f9fd;
         }
 
-        table th, table td {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        tr:hover {
+            background: #eef3fb;
         }
 
-        table tbody {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
-            z-index: 1;
-            overflow: auto;
-        }
-
-        .modal-content {
-            background-color: #fff;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 60%;
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-        }
-
+        /* Menú contextual */
         .context-menu {
             display: none;
             position: absolute;
             background-color: #fff;
-            border: 1px solid #ccc;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-            top: 100%; /* Posición debajo del botón */
-            left: 0; /* Alineado con el borde izquierdo del botón */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            z-index: 999;
         }
 
         .context-menu ul {
-            list-style-type: none;
-            font-size: 12px;
-            margin: 0;
+            list-style: none;
             padding: 0;
+            margin: 0;
         }
 
-        .context-menu ul li {
-            padding: 10px;
+        .context-menu li {
+            padding: 10px 15px;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
-        .context-menu ul li:hover {
-            background-color: #f2f2f2;
+        .context-menu li:hover {
+            background: #f1f5fb;
         }
 
+        /* Modales */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background: #fff;
+            margin: 10% auto;
+            padding: 25px;
+            width: 400px;
+            max-width: 90%;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: var(--primary);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .modal-content label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 14px;
+        }
+
+        .modal-content input[type="text"],
+        .modal-content input[type="date"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal-content .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .modal-content .btn-container button {
+            flex: 1;
+            margin: 0 5px;
+        }
+
+        .close {
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: var(--danger);
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(-10px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
     </style>
 </head>
 <body>
-    <header>
-        <h1>TAREAS</h1>
-    </header>
+<header>
+    <h1>GESTOR DE TAREAS</h1>
+</header>
 
-    <!-- Lista de tareas -->
-    <div class="container">
-        <div class="btn-container">
-            <button id="nuevaTareaBtn">Nueva tarea</button>
-            <div id="menuContextual" class="context-menu">
-                <ul>
-                    <li id="tareaGeneralOption">Tarea General</li>
-                    <li id="tareaEspecificaOption">Tarea Específica</li>
-                </ul>
-            </div>
-            <form action="/exit" method="post">
-                <button id="salirBtn" type="submit">Salir</button>
-            </form>
+<div class="container">
+    <div class="actions">
+        <button id="nuevaTareaBtn">Nueva tarea</button>
+        <div id="menuContextual" class="context-menu">
+            <ul>
+                <li id="tareaGeneralOption">Tarea General</li>
+                <li id="tareaEspecificaOption">Tarea Específica</li>
+            </ul>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Descripción</th>
-                    <th>Nombre</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in data %}
-                    <tr>
-                        <td>{{ item.fecha }}</td>
-                        <td>{{ item.descripcion }}</td>
-                        <td>{{ item.nombre }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <form action="/exit" method="post">
+            <button type="submit">Salir</button>
+        </form>
     </div>
 
-    <!-- Cuadro de diálogo para seleccionar el tipo de tarea -->
-    <div id="seleccionarTipoTareaModal" class="modal">
+    <table>
+        <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Nombre</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in data %}
+            <tr>
+                <td>{{ item.fecha }}</td>
+                <td>{{ item.descripcion }}</td>
+                <td>{{ item.nombre }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Tarea General -->
+<form action="/assignGeneral" method="post" onsubmit="return validarFormularioGeneral()">
+    <div id="tareaGeneralModal" class="modal">
         <div class="modal-content">
-            <h2>Seleccionar tipo de tarea</h2>
+            <span class="close" onclick="cerrarModal('tareaGeneralModal')">&times;</span>
+            <h2>Tarea General</h2>
+            <label for="fechaGeneral">Fecha:</label>
+            <input type="date" id="fechaGeneral" name="fechaGeneral">
+            <label for="descripcionGeneral">Descripción (sin espacios):</label>
+            <input type="text" id="descripcionGeneral" name="descripcionGeneral">
             <div class="btn-container">
-                <button id="tareaGeneralBtn">Tarea General</button>
-                <button id="tareaEspecificaBtn">Tarea Específica</button>
+                <button type="button" onclick="cerrarModal('tareaGeneralModal')">Cancelar</button>
+                <button type="submit">Guardar</button>
             </div>
-            <span class="close">&times;</span>
         </div>
     </div>
+</form>
 
-    <!-- Ventana emergente para Tarea General -->
-    <form action="/assignGeneral" method="post" onsubmit="return validarFormularioGeneral()">
-        <div id="tareaGeneralModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Creando tarea general</h2>
-                <div>
-                    <label for="fechaGeneral">Fecha:</label>
-                    <input type="date" id="fechaGeneral" name="fechaGeneral">
-                </div>
-                <div>
-                    <label for="descripcionGeneral">Descripción (sin espacios):</label>
-                </div>
-                <div>
-                    <input type="text" id="descripcionGeneral" name="descripcionGeneral">
-                </div>
-                <div class="btn-container">
-                    <button id="cancelarGeneral" type="button">Cancelar</button>
-                    <button id="guardarGeneral" type="submit">Guardar</button>
-                </div>
+<!-- Modal Tarea Específica -->
+<form action="/assignEspecifica" method="post" onsubmit="return validarFormularioEspecifica()">
+    <div id="tareaEspecificaModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal('tareaEspecificaModal')">&times;</span>
+            <h2>Tarea Específica</h2>
+            <label for="fechaEspecifica">Fecha:</label>
+            <input type="date" id="fechaEspecifica" name="fechaEspecifica">
+            <label for="nombreEspecifica">Nombre (sin espacios):</label>
+            <input type="text" id="nombreEspecifica" name="nombreEspecifica">
+            <label for="descripcionEspecifica">Descripción (sin espacios):</label>
+            <input type="text" id="descripcionEspecifica" name="descripcionEspecifica">
+            <div class="btn-container">
+                <button type="button" onclick="cerrarModal('tareaEspecificaModal')">Cancelar</button>
+                <button type="submit">Guardar</button>
             </div>
         </div>
-    </form>
+    </div>
+</form>
 
-    <!-- Ventana emergente para Tarea Específica -->
-    <form action="/assignEspecifica" method="post" onsubmit="return validarFormularioEspecifica()">
-        <div id="tareaEspecificaModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Creando tarea específica</h2>
-                <div>
-                    <label for="fechaEspecifica">Fecha:</label>
-                    <input type="date" id="fechaEspecifica" name="fechaEspecifica">
-                </div>
-                <div>
-                    <label for="nombreEspecifica">Nombre (sin espacios):</label>
-                </div>
-                <div>
-                    <input type="text" id="nombreEspecifica" name="nombreEspecifica">
-                </div>
-                <div>
-                    <label for="descripcionEspecifica">Descripción (sin espacios):</label>
-                </div>
-                <div>
-                    <input type="text" id="descripcionEspecifica" name="descripcionEspecifica">
-                </div>
-                <div class="btn-container">
-                    <button id="cancelarEspecifica" type="button">Cancelar</button>
-                    <button id="guardarEspecifica" type="submit">Guardar</button>
-                </div>
-            </div>
-        </div>
-    </form>
+<script>
+    const nuevaTareaBtn = document.getElementById("nuevaTareaBtn");
+    const menuContextual = document.getElementById("menuContextual");
+    const tareaGeneralOption = document.getElementById("tareaGeneralOption");
+    const tareaEspecificaOption = document.getElementById("tareaEspecificaOption");
 
-    <script>
-        const nuevaTareaBtn = document.getElementById("nuevaTareaBtn");
-        const tareaGeneralOption = document.getElementById("tareaGeneralOption");
-        const tareaEspecificaOption = document.getElementById("tareaEspecificaOption");
+    nuevaTareaBtn.addEventListener("click", (event) => {
+        const rect = nuevaTareaBtn.getBoundingClientRect();
+        menuContextual.style.display = "block";
+        menuContextual.style.top = rect.bottom + "px";
+        menuContextual.style.left = rect.left + "px";
+    });
 
-        nuevaTareaBtn.addEventListener("click", (event) => {
-            // Obtener la posición del botón "Nueva tarea"
-            const botonRect = nuevaTareaBtn.getBoundingClientRect();
-            const botonWidth = botonRect.width-1;
-            
-            // Establecer la posición del menú contextual
-            menuContextual.style.display = "block";
-            menuContextual.style.top = botonRect.bottom + "px";
-            menuContextual.style.left = botonRect.left + "px";
-            menuContextual.style.width = botonWidth + "px";
-        });
-
-        // Agrega un evento de clic al documento para cerrar el menú contextual cuando se hace clic en otro lugar
-        document.addEventListener("click", (event) => {
-            // Verifica si el clic no se encuentra dentro del menú contextual o el botón "Nueva tarea"
-            if (
-                event.target !== nuevaTareaBtn &&
-                event.target !== tareaGeneralOption &&
-                event.target !== tareaEspecificaOption
-            ) {
-                menuContextual.style.display = "none"; // Oculta el menú contextual
-            }
-        });
-
-        tareaGeneralOption.addEventListener("click", () => {
+    document.addEventListener("click", (e) => {
+        if (!menuContextual.contains(e.target) && e.target !== nuevaTareaBtn) {
             menuContextual.style.display = "none";
-            console.log("Vamos a tarea general")
-            document.getElementById("tareaGeneralModal").style.display = "block";
-        });
-
-        tareaEspecificaOption.addEventListener("click", () => {
-            menuContextual.style.display = "none";
-            document.getElementById("tareaEspecificaModal").style.display = "block";
-        });
-
-        // Agregar eventos para cancelar tareas generales y específicas
-        const cancelarGeneralBtn = document.getElementById("cancelarGeneral");
-        cancelarGeneralBtn.addEventListener("click", () => {
-            document.getElementById("tareaGeneralModal").style.display = "none";
-            // Restablecer los valores de los campos
-            document.getElementById("fechaGeneral").value = "";
-            document.getElementById("descripcionGeneral").value = "";
-        });
-
-        const cancelarEspecificaBtn = document.getElementById("cancelarEspecifica");
-        cancelarEspecificaBtn.addEventListener("click", () => {
-            document.getElementById("tareaEspecificaModal").style.display = "none";
-            // Restablecer los valores de los campos
-            document.getElementById("fechaEspecifica").value = "";
-            document.getElementById("nombreEspecifica").value = "";
-            document.getElementById("descripcionEspecifica").value = "";
-        });
-
-        function validarFormularioGeneral() {
-            var fechaGeneral = document.getElementById("fechaGeneral").value;
-            var descripcionGeneral = document.getElementById("descripcionGeneral").value.trim();
-
-
-            if (fechaGeneral.trim() == "" || descripcionGeneral.trim() == "") {
-                alert("Por favor, complete todos los campos.");
-                return false; // Impide que el formulario se envíe
-            }
-            if (descripcionGeneral.indexOf(" ") != -1){
-                console.log("AQUI NO")
-                alert("Por favor, la descripción no puede contener espacios.");
-                return false; // Impide que el formulario se envíe
-            }
-            console.log("AQUI")
-            return true; // Permite el envío del formulario si todos los campos están completos
         }
+    });
 
-        function validarFormularioEspecifica() {
-            var fechaEspecifica = document.getElementById("fechaEspecifica").value;
-            var nombreEspecifica = document.getElementById("nombreEspecifica").value;
-            var descripcionEspecifica = document.getElementById("descripcionEspecifica").value;
+    tareaGeneralOption.onclick = () => {
+        menuContextual.style.display = "none";
+        abrirModal('tareaGeneralModal');
+    };
 
-            if (fechaEspecifica.trim() === "" || nombreEspecifica.trim() === "" || descripcionEspecifica.trim() === "") {
-                alert("Por favor, complete todos los campos.");
-                return false; // Impide que el formulario se envíe
-            }
-            if (nombreEspecifica.indexOf(" ") != -1 || descripcionEspecifica.indexOf(" ") != -1){
-                alert("Por favor, la descripción y el nombre no puede contener espacios.");
-                return false; // Impide que el formulario se envíe
-            }
-            return true; // Permite el envío del formulario si todos los campos están completos
+    tareaEspecificaOption.onclick = () => {
+        menuContextual.style.display = "none";
+        abrirModal('tareaEspecificaModal');
+    };
+
+    function abrirModal(id) {
+        document.getElementById(id).style.display = "block";
+    }
+
+    function cerrarModal(id) {
+        document.getElementById(id).style.display = "none";
+    }
+
+    function validarFormularioGeneral() {
+        const fecha = document.getElementById("fechaGeneral").value;
+        const desc = document.getElementById("descripcionGeneral").value.trim();
+        if (!fecha || !desc) { alert("Por favor complete todos los campos."); return false; }
+        if (desc.includes(" ")) { alert("La descripción no puede contener espacios."); return false; }
+        return true;
+    }
+
+    function validarFormularioEspecifica() {
+        const fecha = document.getElementById("fechaEspecifica").value;
+        const nombre = document.getElementById("nombreEspecifica").value.trim();
+        const desc = document.getElementById("descripcionEspecifica").value.trim();
+        if (!fecha || !nombre || !desc) { alert("Por favor complete todos los campos."); return false; }
+        if (nombre.includes(" ") || desc.includes(" ")) {
+            alert("El nombre y la descripción no pueden tener espacios.");
+            return false;
         }
-    </script>
+        return true;
+    }
+</script>
 </body>
 </html>
