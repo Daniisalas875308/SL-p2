@@ -71,7 +71,6 @@ class Command(object):
         # 1: status of the emulator
         # 2: 'ok' or 'error' indicating whether the command succeeded or failed
         while True:
-            #print("Esperando readline...")
             line = self.app.readline()
             log.debug("stdout line: %s", line.rstrip())
             if not line.startswith("data:".encode("ascii")):
@@ -270,9 +269,7 @@ class Emulator(object):
                 to x3270.
             `args` allows sending parameters to the emulator executable 
         """
-        print ("La app es ", app, " y los args son ", args)
         self.app = app or self.create_app(visible, args)
-        print("App creada", self.app)
         self.is_terminated = False
         self.status = Status(None)
         self.timeout = timeout
@@ -311,9 +308,6 @@ class Emulator(object):
         elapsed = time.time() - start
         log.debug("elapsed execution: {0}".format(elapsed))
         self.status = Status(c.status_line)
-        print("Comando enviado:", c.cmdstr)
-        #print("Resultado crudo:", getattr(c, 'result', None))
-        #print("Status line:", c.status_line)
 
         return c
 
@@ -418,7 +412,6 @@ class Emulator(object):
         self.exec_command('String("{0}")'.format(tosend).encode("utf-8"))
 
     def send_enter(self):
-        print ("dentro de la libreria enviamos enter")
         self.exec_command(b"Enter")
 
     def send_clear(self):
