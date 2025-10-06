@@ -1,48 +1,99 @@
 from lib.py3270 import Emulator
 import time
 
-delayScreen=0.5
+retardo_emulador=0.5
 
-def read_line(line, file="pantalla.txt"):
-    # Abre el archivo en modo lectura
+
+#función para comprobar el mensaje del emulador despues del login
+def verificar_inicio():
+    line=terminal.string_get(7,2,24)
+    if line=="Userid is not authorized":
+        return 1
+    line=terminal.string_get(7,2,18)
+    if line=="Password incorrect":
+        return 1
+    line=terminal.string_get(1,1,16)
+    if line.rstrip()=="Userid is in use":
+        return 2
+    return 0
+
+#Función para capturar la pantalla del emulador en un archivo de texto
+def pantalla(filename="pantalla.txt"):
+    time.sleep(retardo_emulador)
+    screen_content = ''
+    for row in range(1, 43 + 1):
+        line = terminal.string_get(row, 1, 79)
+        screen_content += line + '\n'
+    archivo = open(filename, "w")
+    archivo.write(screen_content)
+    archivo.close()
+
+#Función para leer una línea específica de un archivo de texto
+def leer_linea(line, file="pantalla.txt"):
     with open(file, "r") as archivo:
-        lineas = archivo.readlines()  # Lee todas las líneas del archivo
+        lineas = archivo.readlines()  
 
         if 0 <= line < len(lineas):
             linea_deseada = lineas[line]
-            return linea_deseada.strip()  # strip() elimina los caracteres de nueva línea
+            return linea_deseada.strip()  
         else:
             return 0
 
+#Función para obtener las tareas generales de la pantalla del emulador linea a linea        
+def obtener_generales(file="pantalla.txt"):
+    resultado = []
+    for num_line in range(0, 43 + 1):
+        line=leer_linea(num_line,file)
+        if line!=0:
+            if line.find("TOTAL TASK")!=-1:
+                return resultado
+            else:
+                partes = line.split(" ")
+                if partes[0]=="TASK":
+                    temp = {"fecha":partes[3],"descripcion":partes[5].strip('"')}
+                    resultado.append(temp)
+    print("Obtenemos estas generales: ", resultado)
+    return resultado
 
-def emulador(mylogin, mypass):
-    global e, active_window
+#Función para obtener las tareas específicas de la pantalla del emulador linea a linea
+def obtener_especificas(file="pantalla.txt"):
+    resultado = []
+    for num_line in range(0, 43 + 1):
+        line=leer_linea(num_line,file)
+        if line!=0:
+            if line.find("TOTAL TASK")!=-1:
+                return resultado
+            else:
+                partes = line.split(" ")
+                if partes[0]=="TASK":
+                    temp = {"fecha":partes[3],"nombre":partes[4].strip('"'),"descripcion":partes[5].strip('"')}
+                    resultado.append(temp)
+    print("Obtenemos estas específicas: ", resultado)
+    return resultado
+
+
+def emulador(usuario, contrasena):
+    global terminal, active_window
     print ("Iniciando emulador..." )
-    # Main
-    host = "155.210.152.51"
-    port = "3270"
 
-    e = Emulator(visible=True)
-    e.connect(host + ':' + port)
+    terminal = Emulator(visible=True)
+    terminal.connect('155.210.152.51:3270')
     print ("Conectado a host" )
-    time.sleep(delayScreen)
+    time.sleep(retardo_emulador)
 
-
-    #time.sleep(delayScreen)
     print("Llegamos a la pantalla inicial")
-    e.send_enter()
+    terminal.send_enter()
 
-    # Pantalla Login
-    time.sleep(delayScreen)
+    time.sleep(retardo_emulador)
     print("Llegamos al login")
 
     # Usuario
     for attempt in range(5):
         try:
-            e.wait_for_field()
-            e.send_string(mylogin)
-            e.send_enter()
-            print("Enviado usuario " + mylogin)
+            terminal.wait_for_field()
+            terminal.send_string(usuario)
+            terminal.send_enter()
+            print("Enviado usuario " + usuario)
             break
         except Exception as ex:
             print(f"Intento {attempt+1} de enviar usuario fallido: {ex}")
@@ -53,10 +104,10 @@ def emulador(mylogin, mypass):
     # Contraseña
     for attempt in range(5):
         try:
-            e.wait_for_field()
-            e.send_string(mypass)
-            e.send_enter()
-            time.sleep(delayScreen)
+            terminal.wait_for_field()
+            terminal.send_string(contrasena)
+            terminal.send_enter()
+            time.sleep(retardo_emulador)
             print("Enviada contraseña")
             break
         except Exception as ex:
@@ -65,176 +116,113 @@ def emulador(mylogin, mypass):
     else:
         print("No se pudo enviar la contraseña")
 
-    inicio = inicio_correcto()
+    inicio = verificar_inicio()
 
-    if inicio==0:
-        # Pantalla previa a comandos
-        print("Login correcto")
-        time.sleep(delayScreen)
-        e.wait_for_field()
-        e.send_enter()
+    match inicio:
+        case 0:
+            print("Login correcto")
+            time.sleep(retardo_emulador)
+            terminal.wait_for_field()
+            terminal.send_enter()
+            # Pantalla del terminal del emulador
+            time.sleep(retardo_emulador)
+            terminal.wait_for_field()
+            terminal.send_string('tasks.c')
+            terminal.send_enter()
+            return 0
+        case 1:     # Usuario o contraseña incorrectos
+            terminal.terminate()
+            return 1
+        case 2:     # Usuario ya en uso
+            terminal.terminate()
+            return 2
 
-        # Pantalla comandos
-        time.sleep(delayScreen)
-        e.wait_for_field()
-        e.send_string('tasks.c')
-        e.send_enter()
-        return 0
-    elif inicio==1:
-        e.terminate()
-        return 1
-    elif inicio==2:
-        e.terminate()
-        return 2
-
-def inicio_correcto():
-    line=e.string_get(7,2,24)
-    # print("Linea 1: ",line)
-    if line=="Userid is not authorized":
-        return 1
-    line=e.string_get(7,2,18)
-    # print("Linea 2: ",line)
-    if line=="Password incorrect":
-        return 1
-    line=e.string_get(1,1,16)
-    # print("Linea 3: ",line)
-    if line.rstrip()=="Userid is in use":
-        return 2
-    return 0
-
-# Guardar lo que se lee por pantalla en un fichero 
-def pantalla(filename="pantalla.txt"):
-    time.sleep(0.5)
-    screen_content = ''
-    for row in range(1, 43 + 1):
-        line = e.string_get(row, 1, 79)
-        screen_content += line + '\n'
-    archivo = open(filename, "w")
-    archivo.write(screen_content)
-    archivo.close()
-
-# Opción ASSIGN TASKS
-def assign_tasks(tipo:str, fecha:str, desc:str, nombre:str):
+# Función para crear tareas
+def crear_tarea(tipo:str, fecha:str, desc:str, nombre:str):
     desc = '"' + desc.replace(" ", " ") + '"'
     nombre = '"' + nombre.replace(" ", " ") + '"'
-    print("Pasamos a asignar una tarea.")
-    e.send_string("1")
-    e.send_enter()
-    e.delete_field()
+    print("Pasamos a crear una tarea.")
+    terminal.send_string("1")
+    terminal.send_enter()
+    terminal.delete_field()
 
-    print ("Asignando tarea con tipo:", tipo, "fecha:", fecha, "desc:", desc, "nombre:", nombre)
+    print ("Creando tarea con tipo:", tipo, "fecha:", fecha, "desc:", desc, "nombre:", nombre)
     if tipo=="General":
-        e.send_string("1")
-        e.send_enter()
-        e.delete_field()
-        e.send_string(fecha)
-        e.send_enter()
-        e.delete_field()
-        e.send_string(desc)
-        e.send_enter()
-        e.delete_field()
-        e.send_string("a")
-        e.send_enter()
+        terminal.send_string("1")
+        terminal.send_enter()
+        terminal.delete_field()
+        terminal.send_string(fecha)
+        terminal.send_enter()
+        terminal.delete_field()
+        terminal.send_string(desc)
+        terminal.send_enter()
+        terminal.delete_field()
+        terminal.send_string("a")
+        terminal.send_enter()
 
     elif tipo=="Especifica":
-        e.send_string("2")
-        e.send_enter()
-        e.delete_field()
-        e.send_string(fecha)
-        e.send_enter()
-        e.delete_field()
-        e.send_string(nombre)
-        e.send_enter()
-        e.delete_field()
-        e.send_string(desc)
-        e.send_enter()
-        e.delete_field()
-        e.send_enter() 
-        e.send_string("a")
-        e.send_enter()
-        e.send_enter()
+        terminal.send_string("2")
+        terminal.send_enter()
+        terminal.delete_field()
+        terminal.send_string(fecha)
+        terminal.send_enter()
+        terminal.delete_field()
+        terminal.send_string(nombre)
+        terminal.send_enter()
+        terminal.delete_field()
+        terminal.send_string(desc)
+        terminal.send_enter()
+        terminal.delete_field()
+        terminal.send_enter() 
+        terminal.send_string("a")
+        terminal.send_enter()
+        terminal.send_enter()
     
-    
-    e.send_string("0")
-    e.send_enter()
-    e.delete_field()
+    print("Volvemos menu inicial.")
+    terminal.send_string("0")
+    terminal.send_enter()
+    terminal.delete_field()
 
-def get_tasks_general(file="pantalla.txt"):
-    resultado = []
-    for num_line in range(0, 43 + 1):
-        line=read_line(num_line,file)
-        if line!=0:
-            if line.find("TOTAL TASK")!=-1:
-                return resultado
-            else:
-                partes = line.split(" ")
-                # print("PARTES: ",partes)
-                if partes[0]=="TASK":
-                    temp = {"fecha":partes[3],"descripcion":partes[5].strip('"')}
-                    resultado.append(temp)
-    # print("GENERAL: ", resultado)
-    return resultado
-
-def get_tasks_specific(file="pantalla.txt"):
-    resultado = []
-    for num_line in range(0, 43 + 1):
-        line=read_line(num_line,file)
-        # print(line)
-        if line!=0:
-            if line.find("TOTAL TASK")!=-1:
-                return resultado
-            else:
-                partes = line.split(" ")
-                # print("PARTES: ",partes)
-                if partes[0]=="TASK":
-                    temp = {"fecha":partes[3],"nombre":partes[4].strip('"'),"descripcion":partes[5].strip('"')}
-                    resultado.append(temp)
-    # print("SPECIFIC: ", resultado)
-    return resultado
-
-# Opción VIEW TASKS
-def view_tasks():
+# Función para ver tareas
+def ver_tareas():
     print("Pasamos a mostrar las tareas.")
     resultado=[]
-    e.send_string("2")
+    terminal.send_string("2")
     print("Enviando 2")
-    e.send_enter()
-    e.delete_field()
-    e.send_clear()
-    e.send_string("1")
-    e.send_enter()
-    e.delete_field()
+    terminal.send_enter()
+    terminal.delete_field()
+    terminal.send_clear()
+    terminal.send_string("1")
+    terminal.send_enter()
+    terminal.delete_field()
     pantalla()
-    # print("AQUÍ 1")
-    general = get_tasks_general()
-    e.send_clear()
-    e.send_string("a")
-    e.send_enter()
-    e.send_string("2")
-    e.send_enter()
-    e.delete_field()
+    general = obtener_generales()
+    terminal.send_clear()
+    terminal.send_string("a")
+    terminal.send_enter()
+    terminal.send_string("2")
+    terminal.send_enter()
+    terminal.delete_field()
     pantalla()
-    e.send_string("a")
-    e.send_enter()
-    # print("AQUÍ 2")
-    specific = get_tasks_specific()
-    # print("AQUÍ 3")
-    e.send_string("0")
-    e.send_enter()
-    e.delete_field()
-    e.send_string("0")
-    e.send_enter()
+    terminal.send_string("a")
+    terminal.send_enter()
+    specific = obtener_especificas()
+    terminal.send_string("0")
+    terminal.send_enter()
+    terminal.delete_field()
+    terminal.send_string("0")
+    terminal.send_enter()
     resultado =  specific + general
     return resultado
 
-# Opción EXIT TASKS
-def exit_tasks():
-    global e
-    e.send_string("3")
-    e.send_enter()
-    e.delete_field()
-    e.send_string("off")
-    e.send_enter()
-    e.delete_field()
+# función para salir del emulador
+def salir_emulador():
+    global terminal
+    terminal.send_string("3")
+    terminal.send_enter()
+    terminal.delete_field()
+    terminal.send_string("off")
+    terminal.send_enter()
+    terminal.delete_field()
     time.sleep(0.5)
-    e.terminate()
+    terminal.terminate()

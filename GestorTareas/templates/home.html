@@ -202,7 +202,7 @@
 </head>
 <body>
 <header>
-    <h1>GESTOR DE TAREAS</h1>
+    <h1><strong>GESTOR DE TAREAS</strong></h1>
 </header>
 
 <div class="container">
@@ -215,7 +215,7 @@
             </ul>
         </div>
         <form action="/exit" method="post">
-            <button type="submit">Salir</button>
+            <button id="salirBtn" type="submit">Salir</button>
         </form>
     </div>
 
@@ -240,7 +240,7 @@
 </div>
 
 <!-- Modal Tarea General -->
-<form action="/assignGeneral" method="post" onsubmit="return validarFormularioGeneral()">
+<form action="/crearGeneral" method="post" onsubmit="return validarFormularioGeneral()">
     <div id="tareaGeneralModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="cerrarModal('tareaGeneralModal')">&times;</span>
@@ -258,7 +258,7 @@
 </form>
 
 <!-- Modal Tarea Específica -->
-<form action="/assignEspecifica" method="post" onsubmit="return validarFormularioEspecifica()">
+<form action="/creaEspecifica" method="post" onsubmit="return validarFormularioEspecifica()">
     <div id="tareaEspecificaModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="cerrarModal('tareaEspecificaModal')">&times;</span>
@@ -290,8 +290,8 @@
         menuContextual.style.left = rect.left + "px";
     });
 
-    document.addEventListener("click", (e) => {
-        if (!menuContextual.contains(e.target) && e.target !== nuevaTareaBtn) {
+    document.addEventListener("click", (terminal) => {
+        if (!menuContextual.contains(terminal.target) && terminal.target !== nuevaTareaBtn) {
             menuContextual.style.display = "none";
         }
     });

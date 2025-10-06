@@ -222,9 +222,9 @@ class Wc3270App(ExecutableApp):
             try:
                 sock.connect(("localhost", self.script_port))
                 break
-            except socket.error as e:
-                log.warn(e)
-                if e.errno != errno.ECONNREFUSED:
+            except socket.error as terminal:
+                log.warn(terminal)
+                if terminal.errno != errno.ECONNREFUSED:
                     raise
                 time.sleep(1)
                 count += 1
@@ -323,8 +323,8 @@ class Emulator(object):
             except BrokenPipeError:  # noqa
                 # x3270 was terminated, since we are just quitting anyway, ignore it.
                 pass
-            except socket.error as e:
-                if e.errno != errno.ECONNRESET:
+            except socket.error as terminal:
+                if terminal.errno != errno.ECONNRESET:
                     raise
                 # this can happen because wc3270 closes the socket before
                 # the read() can happen, causing a socket error
@@ -371,7 +371,7 @@ class Emulator(object):
 
             Sometimes the server will "unlock" the keyboard but the screen will
             not yet be ready.  In that case, an attempt to read or write to the
-            screen will result in a 'E' keyboard status because we tried to
+            screen will result in a 'terminal' keyboard status because we tried to
             read from a screen that is not yet ready.
 
             Using this method tells the client to wait until a field is
